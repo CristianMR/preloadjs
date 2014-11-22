@@ -1,16 +1,27 @@
 /**
- * preloadjs 0.1.0
+ * preloadjs 0.1.1
  * https://github.com/CristianMR/preloadjs
- * (c) Cristian Martín Rios 2014 | License MIT
+ * (c) Cristian Martín Rios & Heber Lopez 2014 | License MIT
  */
 (function(window){
 
-    function preload(map, version, debug){
+    function preload(config){
+
+        var defaultConfig = {
+          map: [],
+          version: 1,
+          debug: false
+        };
+
+        config = _.extend({}, defaultConfig, config);
+        var map = config.map;
+        var version = config.version;
+        var debug = config.debug;
 
         //Only show internal console, if is in debug mode
         var console = function(debug){
             if(!debug) return {log: function(){}};
-            return {log: window.console.log.bind(window.console)}
+            return {log: _.bind(window.console.log, window.console)}
         }(debug);
 
         var body = document.getElementsByTagName('body')[0];
@@ -23,19 +34,18 @@
         var callbackModList = {};
 
         //Delete scripts in localStorage, if not equals version of app
-        if(storage.version && parseFloat(storage.version) !== version && storage.map){
-            _.forIn(JSON.parse(storage.map), function(object){
-                _.forEach(object, function(urls){
-                    _.forEach(urls, function(url){
-                        localStorage.removeItem(url);
-                    });
-                });
-            });
+        if(storage[withPrefix('version')] && parseFloat(storage[withPrefix('version')]) !== version && storage[withPrefix('map')]){
+          _.forIn(localStorage, function(value, key){
+            //Checks whether the key starts with "pl_", if it does, removes the item from the localStorage
+            if(/^pl_.+$/.test(key)){
+              console.log('removed script from local storage', key);
+              localStorage.removeItem(key);
+            }
+          })
         }
 
         //Saving map and version in localStorage
-        storage.version = version;
-        storage.map = JSON.stringify(map);
+        storage[withPrefix('version')] = version;
 
         //forIn of modules
         _.forIn(map, function(object, module){
@@ -55,7 +65,7 @@
 
         function loadUrls(urls, module, done){
             _.forEach(urls, function(url){
-                if(storage[url]) done(module);
+                if(storage[withPrefix(url)]) done(module);
                 else getScript(url, done, module);
             })
         }
@@ -63,7 +73,7 @@
         function getScript(url, done, module){
             $.get(url, function(data) {
                 console.log("url load", url);
-                storage[url] = data;
+                storage[withPrefix(url)] = data;
                 done(module);
             }, 'text');//Type text, then jQuery don't try to execute it.
         }
@@ -80,7 +90,7 @@
             //Add scripts to body
             _.forEach(map[name].scripts, function(url){
                 var script = document.createElement('script');
-                script.textContent = storage[url];
+                script.textContent = storage[withPrefix(url)];
                 body.appendChild(script);
             });
 
@@ -118,6 +128,10 @@
                 });
             return haveDependencies;
         }
+
+      function withPrefix(string){
+        return 'pl_' + string;
+      }
 
     }
 

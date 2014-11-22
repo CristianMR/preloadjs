@@ -1,6 +1,6 @@
 {
   "name": "preloadjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PreloadJS load your application scripts for high speed in future connections.",
   "main": "./dist/preload.min.js",
   "directories": {
@@ -22,7 +22,7 @@
     "localStorage",
     "CristianMR"
   ],
-  "author": "Cristian Martín Rios <matrixcmr@gmail.com>",
+  "author": "Cristian Martín Rios <matrixcmr@gmail.com> & Heber Lopez <heberlopez@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/CristianMR/preloadjs/issues"

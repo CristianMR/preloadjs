@@ -1,9 +1,10 @@
 {
   "name": "preloadjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/CristianMR/preloadjs",
   "authors": [
-    "Cristian Martín Rios <matrixcmr@gmail.com>"
+    "Cristian Martín Rios <matrixcmr@gmail.com>",
+    "Heber Lopez <heberlopez@gmail.com>"
   ],
   "description": "PreloadJS load your application scripts for high speed in future connections.",
   "main": "./dist/preload.js",

@@ -8,7 +8,7 @@ The mechanism is simple, first you need an app structure. And a version, if the 
     var applicationMap = {
       core: {
         scripts: ['vendors/angular.min.js', 'vendors/angular-route.min.js'],
-        initOnLoad: false // * This can be true, but in this example, the module 'myApp' will call the module 'core', because is a dependency *
+        initOnLoad: false//This can be true, but in this example, the module 'myApp' will call the module 'core', because is a dependency
       },
       myApp: {
         scripts: ['app.js','view1/view1.js','view2/view2.js', 'components/version/version.js', 'components/version/version-directive.js', 'components/version/interpolate-filter.js'],
@@ -22,7 +22,7 @@ The mechanism is simple, first you need an app structure. And a version, if the 
 
     var debugMode = true;
 
-    preload(applicationMap, version, debugMode);
+    preload({map: applicationMap, version: version, debug: debugMode});
 </script>
 ```
 
