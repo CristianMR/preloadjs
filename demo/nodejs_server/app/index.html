@@ -7,7 +7,7 @@
   <title>My AngularJS App</title>
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="styles/app.css">
 </head>
 <body>
   <ul class="menu">
@@ -23,8 +23,8 @@
 
   <div>Angular seed app: v<span app-version></span></div>
 
-  <script src="../bower_components/lodash/dist/lodash.js"></script>
-  <script src="../dist/preload.min.js"></script>
+  <script src="bower_components/lodash/dist/lodash.js"></script>
+  <script src="dist/preload.min.js"></script>
 
   <script type="text/javascript">
     var applicationMap = {
@@ -33,10 +33,13 @@
         initOnLoad: false//This can be true, but in this example, the module 'myApp' will call the module 'core', because is a dependency
       },
       myApp: {
-        scripts: ['app.js','view1/view1.js','view2/view2.js', 'components/version/version.js', 'components/version/version-directive.js', 'components/version/interpolate-filter.js'],
+        scripts: ['scripts/app.js','scripts/view1/view1.js','scripts/view2/view2.js', 'components/version/version.js', 'components/version/version-directive.js', 'components/version/interpolate-filter.js'],
         dependencies: ['core'],
         isAngularModule: true,
-        initOnLoad: true
+        initOnLoad: true/*, Uncomment and run nodejs server, to try allInOne
+        allInOne: {
+          url: 'allInOne'
+        }*/
       }
     };
 

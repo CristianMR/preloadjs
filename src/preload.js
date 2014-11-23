@@ -1,5 +1,5 @@
 /**
- * preloadjs 0.1.1
+ * preloadjs 0.1.2
  * https://github.com/CristianMR/preloadjs
  * (c) Cristian Martín Rios & Heber Lopez 2014 | License MIT
  */
@@ -20,8 +20,8 @@
 
         //Only show internal console, if is in debug mode
         var console = function(debug){
-            if(!debug) return {log: function(){}};
-            return {log: _.bind(window.console.log, window.console)}
+            if(!debug) return {log: function(){}, error: function(){}};
+            return {log: _.bind(window.console.log, window.console), error: _.bind(window.console.error, window.console)}
         }(debug);
 
         var body = document.getElementsByTagName('body')[0];
@@ -31,6 +31,7 @@
 
         var modsLoaded = [];
         var modsInitiated = [];
+        var modsWaitingForScriptsToInit = [];
         var callbackModList = {};
 
         //Delete scripts in localStorage, if not equals version of app
@@ -50,18 +51,59 @@
         //forIn of modules
         _.forIn(map, function(object, module){
 
-            //With _.after, only excetures this function the last time
-            var done = _.after(_.size(object.scripts), function(module){
+            //With _.after, only execute this function the last time
+            //With _.once, only can execute this function one time
+            var done = _.after(_.size(object.scripts), _.once(function(module){
 
                 //Add module to list of mods loaded, and load it !
                 console.log("module loaded", module);
                 modsLoaded.push(module);
-                if(map[module].initOnLoad)
+                if(map[module].initOnLoad || _.indexOf(modsWaitingForScriptsToInit, module) !== -1)
                     initModule(module);
+            }));
+
+            if(object.allInOne && object.allInOne.url)
+                loadAllInOne(object, module, done);
+            else
+                loadUrls(object.scripts, module, done);
+        });
+
+        function loadAllInOne(object, module, done){
+
+            //Clone the object without reference to the original
+            var urls = _.clone(object.scripts, true);
+
+            //if exist in local storage, remove and call to done(module)
+            var urls_removed = _.remove(urls, function(value){
+                return !_.isUndefined(storage[withPrefix(value)]);
             });
 
-            loadUrls(object.scripts, module, done);
-        });
+            _.forEach(urls_removed, function(url){
+                done(module);
+            });
+
+            if(_.size(urls) === 0) return;
+
+            var callback = function(status, data){
+                if(status !== 200) return console.error('Module allInOne', module,'not loaded');
+                console.log('Module allInOne', module, 'downloaded');
+                if(typeof data === 'string') data = JSON.parse(data);
+                _.forIn(data, function(data, url){
+                    storage[withPrefix(url)] = data;
+                    done(module);
+                });
+            };
+
+            var postData = JSON.stringify({
+                urls: urls
+            });
+
+            var headers = {
+                'content-type':'application/json'
+            };
+
+            ajax('POST', object.allInOne.url, callback, postData, headers);
+        }
 
         function loadUrls(urls, module, done){
             _.forEach(urls, function(url){
@@ -88,6 +130,13 @@
             //Is there any dependency? If answer is yes, stop.
             if(map[name].dependencies && checkModuleDependency(name)) return;
 
+            //If the module was not loaded, add to waiting for scripts to init, and stop
+            if(_.indexOf(modsLoaded, name) === -1){
+                console.log('Mod',name, 'is still waiting for scripts to init');
+                if(_.indexOf(modsWaitingForScriptsToInit, name) === -1) modsWaitingForScriptsToInit.push(name);
+                return;
+            }
+
             //Add scripts to body
             _.forEach(map[name].scripts, function(url){
                 var script = document.createElement('script');
@@ -104,6 +153,8 @@
             console.log("module initiated", name);
             //To initiated-modules list
             modsInitiated.push(name);
+
+            _.pull(modsWaitingForScriptsToInit, name);
 
             //Call the modules which have this module as dependency
             if(callbackModList[name]){

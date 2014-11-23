@@ -11,10 +11,13 @@ The mechanism is simple, first you need an app structure. And a version, if the 
         initOnLoad: false//This can be true, but in this example, the module 'myApp' will call the module 'core', because is a dependency
       },
       myApp: {
-        scripts: ['app.js','view1/view1.js','view2/view2.js', 'components/version/version.js', 'components/version/version-directive.js', 'components/version/interpolate-filter.js'],
+        scripts: ['scripts/app.js','scripts/view1/view1.js','scripts/view2/view2.js', 'components/version/version.js', 'components/version/version-directive.js', 'components/version/interpolate-filter.js'],
         dependencies: ['core'],
         isAngularModule: true,
-        initOnLoad: true
+        initOnLoad: true,
+        allInOne: {//Load multiple files in one request
+          url: 'allInOne'
+        }
       }
     };
 
