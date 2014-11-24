@@ -22,7 +22,7 @@ var readFile = Promise.promisify(require("fs").readFile);//Add promises to fs on
 
 
 app.use('/bower_components', express.static(path.join(__dirname, '../../bower_components')));//Take bower_components from preloadjs/bower_components
-app.use(/^.+preload.+js$/, function(req, res, next){
+app.use(/^.*preload(?:.min)?.js$/, function(req, res, next){
 	//If you are development in this project, you want this here
 	var fileDirAndName = developmentMode ? 'src/preload.js' : 'dist/preload.min.js';
 	res.sendFile(path.join(__dirname, '../../', fileDirAndName));
@@ -37,12 +37,10 @@ app.post('/allInOne', function(req, res, next){
 
 	var data = {};
 
-	var promises = [];
-
-	_.forEach(urls, function(url){
-		promises.push(readFile(path.join(__dirname, 'app', url), 'utf-8').then(function(content){
+	var promises = _.map(urls, function(url){
+		return readFile(path.join(__dirname, 'app', url), 'utf-8').then(function(content){
 			data[url] = content;
-		}));
+		});
 	});
 
 	Promise.all(promises).then(function(){

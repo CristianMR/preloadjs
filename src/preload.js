@@ -71,7 +71,7 @@
         function loadAllInOne(object, module, done){
 
             //Clone the object without reference to the original
-            var urls = _.clone(object.scripts, true);
+            var urls = _.cloneDeep(object.scripts, true);
 
             //if exist in local storage, remove and call to done(module)
             var urls_removed = _.remove(urls, function(value){
