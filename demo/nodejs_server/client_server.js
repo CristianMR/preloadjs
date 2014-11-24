@@ -15,52 +15,44 @@ var express = require('express');
 var app = express();
 var _ = require('lodash');
 var port = 3000;
+var developmentMode = true;
 
-app.use('/scripts', express.static(path.join(__dirname, 'app/scripts')));
-app.use('/vendors', express.static(path.join(__dirname, 'app/vendors')));
-app.use('/components', express.static(path.join(__dirname, 'app/components')));
-app.use('/styles', express.static(path.join(__dirname, 'app/styles')));
-app.use('/images', express.static(path.join(__dirname, 'app/images')));
+var Promise = require("bluebird");
+var readFile = Promise.promisify(require("fs").readFile);//Add promises to fs only for readFile function
+
+
 app.use('/bower_components', express.static(path.join(__dirname, '../../bower_components')));//Take bower_components from preloadjs/bower_components
-app.use('/dist', express.static(path.join(__dirname, '../../dist')));
-app.use('/src', express.static(path.join(__dirname, '../../src')));//If you are development in this project, you want this here
+app.use(/^.+preload.+js$/, function(req, res, next){
+	//If you are development in this project, you want this here
+	var fileDirAndName = developmentMode ? 'src/preload.js' : 'dist/preload.min.js';
+	res.sendFile(path.join(__dirname, '../../', fileDirAndName));
+});
+app.use(express.static(__dirname + '/app'));
 
 app.use(bodyParser.json());
-
-app.get('/', function(req, res, next){
-	res.sendFile(path.join(__dirname, '/app/index.html'));
-});
 
 //Read all files and return data in one request
 app.post('/allInOne', function(req, res, next){
 	var urls = req.body.urls ? req.body.urls : [];
 
-	console.log(req.body);
-
 	var data = {};
 
-	var done = _.after(_.size(urls), function(){
-		console.log("all loaded");
-		res.send(data);
-	});
-
-	var callback = function(url, content){
-		data[url] = content;
-		done();
-	};
+	var promises = [];
 
 	_.forEach(urls, function(url){
-		readFile(url, callback);
+		promises.push(readFile(path.join(__dirname, 'app', url), 'utf-8').then(function(content){
+			data[url] = content;
+		}));
 	});
 
-	function readFile(file, callback){
-		fs.readFile(path.join(__dirname, 'app', file), 'utf-8', function read(err, data) {
-			if (err) {
-				throw err;
-			}
-			callback(file, data);
-		});
-	}
+	Promise.all(promises).then(function(){
+		console.log("all loaded");
+		res.send(data);
+	}).catch(function(e) {
+		res.status(503);
+		console.error("Error reading file", e);
+		res.send("Error reading file");
+	});
 });
 
 app.listen(port, function(){
